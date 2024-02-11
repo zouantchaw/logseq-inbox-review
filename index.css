@@ -5,6 +5,7 @@
   justify-content: center;
   height: 100vh;
   background-color: #f3f4f6;
+  padding: 20px; /* Added padding to prevent UI from touching the edges */
 }
 
 .close-btn {
@@ -14,47 +15,49 @@
   background-color: transparent;
   border: none;
   cursor: pointer;
-  font-size: 24px; /* Adjust size as needed */
-  color: #374151; /* dark:text-gray-200 */
+  font-size: 24px;
+  color: #374151;
 }
 
 .flashcard-content {
   position: relative;
-  width: 600px; /* Fixed width */
-  height: 600px; /* Fixed height */
+  max-width: 80%; /* Changed to max-width for responsiveness */
+  height: auto; /* Changed to auto to fit content */
   padding: 16px;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Adjust content spacing */
+  justify-content: space-between;
 }
 
 .flashcard-title {
   text-align: center;
   margin-bottom: 16px;
-  font-size: 24px; /* text-2xl */
-  font-weight: bold; /* font-bold */
-  color: #374151; /* dark:text-gray-200 */
+  font-size: 24px;
+  font-weight: bold;
+  color: #374151;
 }
 
 .flashcard-note {
-  border: 1px solid #e5e7eb; /* border-gray-200 */
+  border: 1px solid #e5e7eb;
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 16px;
+  overflow-y: auto; /* Added overflow handling */
+  max-height: 300px; /* Limit height */
 }
 
 .note-title {
-  font-size: 18px; /* text-lg */
-  font-weight: 600; /* font-semibold */
+  font-size: 18px;
+  font-weight: 600;
   margin-bottom: 8px;
-  color: #4b5563; /* dark:text-gray-300 */
+  color: #4b5563;
 }
 
 .note-content {
-  color: #4b5563; /* text-gray-600 */
+  color: #4b5563;
 }
 
 .flashcard-actions {
@@ -66,21 +69,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 40px; /* h-10 */
+  height: 40px;
   padding: 0 16px;
-  font-size: 14px; /* text-sm */
-  font-weight: 500; /* font-medium */
-  border-radius: 8px; /* rounded-lg */
-  color: #ffffff; /* text-white */
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  color: #ffffff;
   cursor: pointer;
 }
 
 .delete {
-  background-color: #ef4444; /* bg-red-500 */
+  background-color: #ef4444;
 }
 
 .save {
-  background-color: #22c55e; /* bg-green-500 */
+  background-color: #22c55e;
 }
 
 .action-btn:hover {
