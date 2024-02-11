@@ -27,8 +27,8 @@ logseq.ready().then(() => {
         );
 
         let allBlockContents = "";
-        // Limit the number of paragraphs to 3
-        const limitedResults = pageContentResult.slice(0, 3);
+        // Limit the number of paragraphs to 1-10
+        const limitedResults = pageContentResult.slice(1, 4);
         limitedResults.forEach((blockArray) => {
           const block = blockArray[0];
           allBlockContents += `<p>${block.content}</p>`;
@@ -44,7 +44,7 @@ logseq.ready().then(() => {
               ${allBlockContents}
             </div>
             <div class="flashcard-actions">
-              <button class="action-btn delete">Delete</button>
+              <button class="action-btn delete" onclick="deletePage('${pageName}')">Delete</button>
               <button class="action-btn save">Save</button>
             </div>
           </div>
@@ -54,6 +54,19 @@ logseq.ready().then(() => {
       logseq.showMainUI();
     },
   });
+
+  window.deletePage = async (pageId) => {
+    console.log(`Attempting to delete page with ID: ${pageId}`); // Debug log
+    try {
+      await logseq.DB.deletePage(pageId);
+      console.log("Page deleted successfully"); // Success log
+      logseq.App.showMsg("Page deleted successfully");
+      logseq.hideMainUI(); // Hide the UI after deletion
+    } catch (error) {
+      console.error("Failed to delete page:", error); // Error log
+      logseq.App.showMsg("Failed to delete page");
+    }
+  };
 
   logseq.App.registerUIItem("toolbar", {
     key: "logseq-flashcards-open",
