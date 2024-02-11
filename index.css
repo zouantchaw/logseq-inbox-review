@@ -1,0 +1,88 @@
+.flashcard-ui {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f3f4f6;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 24px; /* Adjust size as needed */
+  color: #374151; /* dark:text-gray-200 */
+}
+
+.flashcard-content {
+  position: relative;
+  width: 600px; /* Fixed width */
+  height: 600px; /* Fixed height */
+  padding: 16px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Adjust content spacing */
+}
+
+.flashcard-title {
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 24px; /* text-2xl */
+  font-weight: bold; /* font-bold */
+  color: #374151; /* dark:text-gray-200 */
+}
+
+.flashcard-note {
+  border: 1px solid #e5e7eb; /* border-gray-200 */
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.note-title {
+  font-size: 18px; /* text-lg */
+  font-weight: 600; /* font-semibold */
+  margin-bottom: 8px;
+  color: #4b5563; /* dark:text-gray-300 */
+}
+
+.note-content {
+  color: #4b5563; /* text-gray-600 */
+}
+
+.flashcard-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px; /* h-10 */
+  padding: 0 16px;
+  font-size: 14px; /* text-sm */
+  font-weight: 500; /* font-medium */
+  border-radius: 8px; /* rounded-lg */
+  color: #ffffff; /* text-white */
+  cursor: pointer;
+}
+
+.delete {
+  background-color: #ef4444; /* bg-red-500 */
+}
+
+.save {
+  background-color: #22c55e; /* bg-green-500 */
+}
+
+.action-btn:hover {
+  opacity: 0.9;
+}
