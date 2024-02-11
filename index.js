@@ -39,6 +39,7 @@ logseq.ready().then(() => {
         const postData = {
           model: "llama2",
           prompt: `Generate only one title for this content: ${allBlockContents}`,
+          stream: false,
         };
         logseq.App.showMsg("Fetching data from LLaMA...");
         try {
