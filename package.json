@@ -2,5 +2,16 @@
   "name": "logseq-inbox-review",
   "version": "1.0.0",
   "main": "index.html",
-  "logseq": {}
+  "description": "📖 Review your logseq inbox with ai",
+  "license": "MIT",
+  "devDependencies": {
+    "@logseq/libs": "^0.0.1-alpha.29"
+  },
+  "browserslist": [
+    "chrome 80"
+  ],
+  "logseq": {
+    "id": "_edodonfur",
+    "icon": "logseq.png"
+  }
 }
