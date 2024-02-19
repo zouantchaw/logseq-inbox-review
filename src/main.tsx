@@ -52,7 +52,9 @@ function main() {
   logseq.App.registerUIItem("toolbar", {
     key: openIconName,
     template: `
-      <div data-on-click="show" class="${openIconName}">⚙️</div>
+      <a data-on-click="show" class="button">
+        <i class="ti ti-layers-difference"></i>
+      </a>
     `,
   });
 }
