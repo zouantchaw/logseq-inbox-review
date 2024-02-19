@@ -35,43 +35,6 @@ logseq.ready().then(() => {
           const block = blockArray[0];
           allBlockContents += `<p>${block.content}</p>`;
         });
-        // Prepare the data for the POST request to LLaMA
-        const postData = {
-          model: "llama2",
-          prompt: `Generate only one title for this content: ${allBlockContents}`,
-          stream: false,
-        };
-        logseq.App.showMsg("Fetching data from LLaMA...");
-        try {
-          const response = await fetch("http://localhost:11434/api/generate", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(postData),
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder("utf-8");
-
-          let result = "";
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            result += decoder.decode(value);
-          }
-
-          const data = result.split("\n").filter(Boolean).map(JSON.parse);
-          const fullResponse = data.map((obj) => obj.response).join("");
-          logseq.App.showMsg("Data fetched from LLaMA");
-          logseq.App.showMsg(`Data: ${fullResponse}`);
-        } catch (error) {
-          logseq.App.showMsg(`Error fetching data from LLaMA: ${error}`);
-        }
 
         const mainUI = document.querySelector("#app");
         mainUI.innerHTML = `
@@ -83,16 +46,60 @@ logseq.ready().then(() => {
                   ${allBlockContents}
                 </div>
                 <div class="flashcard-actions">
-                  <button class="action-btn delete" onclick="deletePage('${pageName}')">Delete</button>
+                  <button class="action-btn delete" onclick="deletePage('${pageId}')">Delete</button>
                   <button class="action-btn save">Save</button>
                 </div>
               </div>
             </div>
         `;
+        // After setting innerHTML, add this code to set up the event listener
+        document.querySelector('.action-btn.save').addEventListener('click', () => {
+          fetchDataFromLlama(allBlockContents);
+        });
       }
       logseq.showMainUI();
     },
   });
+
+  window.fetchDataFromLlama = async (allBlockContents) => {
+    // Prepare the data for the POST request to LLaMA
+    const postData = {
+      model: "llama2",
+      prompt: `Turn this into an anki flashcard: ${allBlockContents}`,
+      stream: false,
+    };
+    logseq.App.showMsg("Fetching data from LLaMA...");
+    try {
+      const response = await fetch("http://localhost:11434/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(postData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      let result = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        result += decoder.decode(value);
+      }
+
+      const data = result.split("\n").filter(Boolean).map(JSON.parse);
+      const fullResponse = data.map((obj) => obj.response).join("");
+      logseq.App.showMsg("Data fetched from LLaMA");
+      logseq.App.showMsg(`Data: ${fullResponse}`);
+    } catch (error) {
+      logseq.App.showMsg(`Error fetching data from LLaMA: ${error}`);
+    }
+  };
 
   window.deletePage = async (pageId) => {
     console.log(`Attempting to delete page with ID: ${pageId}`); // Debug log
