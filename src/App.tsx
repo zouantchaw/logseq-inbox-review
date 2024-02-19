@@ -1,9 +1,26 @@
-import React, { useRef, CSSProperties } from "react";
-import { useAppVisible } from "./utils";
+import React, { useRef, CSSProperties, useState } from "react";
+import { useAppVisible, useInference } from "./utils";
 
 function App() {
   const innerRef = useRef<HTMLDivElement>(null);
   const visible = useAppVisible();
+  const [data, setdata] = useState({
+    title: "Machine Learning Needs Better Tools",
+    description: "Using llama and mistral locally",
+    content:
+      "In early 2021, there was a shift. Advadnoun released a Colab notebook called [The Big Sleep](https://twitter.com/advadnoun/status/1351038053033406468?lang=en). RiversHaveWings followed up with the [VQGAN+CLIP notebook](https://colab.research.google.com/github/justinjohn0306/VQGAN-CLIP/blob/main/VQGAN%2BCLIP(Updated).ipynb). These notebooks turned text descriptions into images by guiding a GAN with CLIP. ([View Highlight](https://read.readwise.io/read/01gstvetndwz03csdw7dhj6zpv))\n\nThese people were not affiliated with a lab. They were often self-taught, just tinkering in their spare time. Or they were software engineers, cobbling together bits of machine learning code.\n\nPart of what made this all possible was pre-trained foundation models. Instead of having to train a model from scratch at great expense, individuals could pick models off-the-shelf and combine them in interesting ways. Kind of like how you can import a few packages from npm and plug them together to make something new. ([View Highlight](https://read.readwise.io/read/01gstvg3sz6hxf6hbdvhgfxhd5))",
+  });
+
+  const {
+    data: inferenceData,
+    error,
+    loading,
+  } = useInference({
+    model: "mistral",
+    prompt: `Summarize this content into a title: ${data.content}`
+  });
+  console.log(inferenceData);
+
   if (visible) {
     return (
       <main
@@ -21,52 +38,52 @@ function App() {
           data-v0-t="card"
         >
           <div className="flex flex-col space-y-1.5 p-6">
-            <h3 className="whitespace-nowrap tracking-tight text-lg font-bold">Review your inbox</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Using llama and mistral locally</p>
+            <h3 className="whitespace-nowrap tracking-tight text-lg font-bold">
+              {data.title}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {data.description}
+            </p>
           </div>
           <div className="p-6 text-sm leading-relaxed">
             <div
               dir="ltr"
               className="relative overflow-hidden h-64"
-              style={{ position: 'relative', '--radix-scroll-area-corner-width': '0px', '--radix-scroll-area-corner-height': '0px' } as CSSProperties}
+              style={
+                {
+                  position: "relative",
+                  "--radix-scroll-area-corner-width": "0px",
+                  "--radix-scroll-area-corner-height": "0px",
+                } as CSSProperties
+              }
             >
               <style>{`[data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-webkit-scrollbar{display:none}`}</style>
               <div
                 data-radix-scroll-area-viewport=""
                 className="h-full w-full rounded-[inherit]"
-                style={{ overflow: 'hidden scroll' }}
+                style={{ overflow: "hidden scroll" }}
               >
-                <div style={{ minWidth: '100%', display: 'table' }}>
-                  <p>
-                    "Realize deeply that the present moment is all you have. Make the NOW the primary focus of your life."
-                  </p>
-                  <p className="mt-4">
-                    "The Power of Now is a guide to spiritual enlightenment from a man who is emerging as one of this
-                    generation's clearest, most inspiring teachers. Eckhart Tolle is not aligned with any particular
-                    religion but does what all the great masters have done: shows that the way, the truth, and the light
-                    already exist within each human being. There is no need to look elsewhere."
-                  </p>
-                  <p className="mt-4">
-                    "To make the journey into the Now we will need to leave our analytical mind and its false created self,
-                    the ego, behind. From the very first page of Eckhart Tolle's extraordinary book, we move rapidly into a
-                    significantly higher altitude where we breathe a lighter air. We become connected to the indestructible
-                    essence of our Being, “The eternal, ever present One Life beyond the myriad forms of life that are
-                    subject to birth and death."
-                  </p>
-                  <p className="mt-4">
-                    "Although the journey is challenging, Eckhart Tolle uses simple language and an easy question and answer
-                    format to guide us. A word of mouth phenomenon since its first publication, The Power of Now is one of
-                    those rare books with the power to create an experience in readers, one that can radically change their
-                    lives for the better."
-                  </p>
+                <div style={{ minWidth: "100%", display: "table" }}>
+                  <p>{data.content}</p>
                 </div>
               </div>
             </div>
           </div>
           <div className="items-center p-6 flex justify-end space-x-4">
-            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">ai</button>
-            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Save</button>
-            <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Delete</button>
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              onClick={(e) => {
+                console.log("ai");
+              }}
+            >
+              ai
+            </button>
+            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+              Save
+            </button>
+            <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+              Delete
+            </button>
           </div>
         </div>
       </main>
