@@ -1,4 +1,5 @@
-// Register the main command
+// Models: mistral, llama
+const model = "mistral";
 logseq.ready().then(() => {
   logseq.provideModel({
     async showFlashcardUI() {
@@ -64,11 +65,11 @@ logseq.ready().then(() => {
   window.fetchDataFromLlama = async (allBlockContents) => {
     // Prepare the data for the POST request to LLaMA
     const postData = {
-      model: "llama2",
-      prompt: `Turn this into an anki flashcard: ${allBlockContents}`,
+      model: model,
+      prompt: `Summarize this content in a precise short title: ${allBlockContents}`,
       stream: false,
     };
-    logseq.App.showMsg("Fetching data from LLaMA...");
+    logseq.App.showMsg(`Fetching data from: ${model}`);
     try {
       const response = await fetch("http://localhost:11434/api/generate", {
         method: "POST",
@@ -94,10 +95,10 @@ logseq.ready().then(() => {
 
       const data = result.split("\n").filter(Boolean).map(JSON.parse);
       const fullResponse = data.map((obj) => obj.response).join("");
-      logseq.App.showMsg("Data fetched from LLaMA");
+      logseq.App.showMsg(`fetching data from ${model} successful`);
       logseq.App.showMsg(`Data: ${fullResponse}`);
     } catch (error) {
-      logseq.App.showMsg(`Error fetching data from LLaMA: ${error}`);
+      logseq.App.showMsg(`Error fetching data from ${model}: ${error}`);
     }
   };
 
