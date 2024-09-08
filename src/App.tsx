@@ -1,4 +1,4 @@
-import React, { useRef, CSSProperties, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useAppVisible, useInference } from "./utils";
 import { BlockEntity } from "@logseq/libs/dist/LSPlugin.user";
 
@@ -24,29 +24,14 @@ function App() {
            [(get ?props :tags) ?tags]
            [(contains? ?tags "Inbox")]]
         `);
-        console.log("Inbox pages:", inboxPages);
 
         if (inboxPages && inboxPages.length > 0) {
           const firstInboxPage = inboxPages[0][0];
-          console.log("First Inbox page:", firstInboxPage);
-
-          // Fetch the content of the first Inbox page
           const pageContent = await logseq.Editor.getPageBlocksTree(
             firstInboxPage.name
           );
-          console.log("First Inbox page content:", pageContent);
+          const formattedContent = formatPageContent(pageContent);
 
-          // Process the content and format it as bullet points
-          const formattedContent = pageContent
-            .map((block) => {
-              // Remove the properties section if it exists
-              const contentWithoutProperties =
-                block.content.split("\n\n")[1] || block.content;
-              return `• ${contentWithoutProperties.trim()}`;
-            })
-            .join("\n");
-
-          // Update the data state with the new content and title
           setData({
             title: firstInboxPage.originalName || firstInboxPage.name,
             description: `Content from "${
@@ -57,8 +42,6 @@ function App() {
 
           setInboxPages(pageContent);
         } else {
-          console.log("No Inbox pages found");
-          setInboxPages([]);
           setData({
             title: "No Inbox Pages",
             description: "No Inbox pages found",
@@ -79,7 +62,6 @@ function App() {
     fetchInboxPages();
   }, []);
 
-  // Log inference data or error
   const {
     data: inferenceData,
     error: inferenceError,
@@ -100,60 +82,37 @@ function App() {
   if (visible) {
     return (
       <main
-        className="backdrop-filter backdrop-blur-md fixed inset-0 flex items-center justify-center"
+        className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
         onClick={(e) => {
-          if (!innerRef.current?.contains(e.target as any)) {
-            console.log("click outside");
+          if (!innerRef.current?.contains(e.target as Node)) {
             window.logseq.hideMainUI();
           }
         }}
       >
         <div
           ref={innerRef}
-          className="bg-white text-card-foreground shadow-lg border border-gray-200 dark:border-gray-800 rounded-lg transition-transform hover:scale-105 w-full md:w-3/4 lg:w-1/2 mx-auto"
-          data-v0-t="card"
+          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
         >
-          <div className="flex flex-col space-y-1.5 p-6">
-            <h3 className="tracking-tight text-lg font-bold">{data.title}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold">{data.title}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {data.description}
             </p>
           </div>
-          <div className="p-6 text-sm leading-relaxed">
-            <div
-              dir="ltr"
-              className="relative overflow-hidden h-64"
-              style={
-                {
-                  position: "relative",
-                  "--radix-scroll-area-corner-width": "0px",
-                  "--radix-scroll-area-corner-height": "0px",
-                } as CSSProperties
-              }
-            >
-              <style>{`[data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-webkit-scrollbar{display:none}`}</style>
-              <div
-                data-radix-scroll-area-viewport=""
-                className="h-full w-full rounded-[inherit]"
-                style={{ overflow: "hidden scroll" }}
-              >
-                <div style={{ minWidth: "100%", display: "table" }}>
-                  <pre className="whitespace-pre-wrap">{data.content}</pre>
-                </div>
-              </div>
-            </div>
+          <div className="flex-grow overflow-auto p-4">
+            <pre className="whitespace-pre-wrap text-sm">{data.content}</pre>
           </div>
-          <div className="items-center p-6 flex justify-end space-x-4">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2">
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
               onClick={() => console.log("AI button clicked")}
             >
               {inferenceLoading ? "Loading..." : "AI"}
             </button>
-            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            <button className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded transition-colors">
               Save
             </button>
-            <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+            <button className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition-colors">
               Delete
             </button>
           </div>
@@ -162,6 +121,25 @@ function App() {
     );
   }
   return null;
+}
+
+function formatPageContent(blocks: BlockEntity[]): string {
+  return blocks
+    .flatMap((block) => {
+      if (block.children && block.children.length > 0) {
+        return block.children.map((child) => {
+          if (Array.isArray(child)) {
+            return `• ${child[1]}`;
+          } else if (typeof child === "object" && child.content) {
+            return `• ${child.content}`;
+          }
+          return "";
+        });
+      }
+      return [];
+    })
+    .filter(Boolean)
+    .join("\n");
 }
 
 export default App;
