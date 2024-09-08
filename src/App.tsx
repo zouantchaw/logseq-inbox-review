@@ -5,7 +5,7 @@ import { BlockEntity, PageEntity } from "@logseq/libs/dist/LSPlugin.user";
 function App() {
   const innerRef = useRef<HTMLDivElement>(null);
   const visible = useAppVisible();
-  const [inboxPages, setInboxPages] = useState<any[]>([]);
+  const [inboxPages, setInboxPages] = useState<BlockEntity[]>([]);
 
   const [data, setData] = useState({
     title: "Machine Learning Needs Better Tools",
@@ -35,9 +35,22 @@ function App() {
         `);
         console.log("Inbox pages:", inboxPages);
 
-        const flattenedPages = (inboxPages ?? []).flat() as PageEntity[];
-        setInboxPages(flattenedPages);
-        console.log("Fetched Inbox pages:", flattenedPages);
+        if (inboxPages && inboxPages.length > 0) {
+          const firstInboxPage = inboxPages[0][0];
+          console.log("First Inbox page:", firstInboxPage);
+
+          // Fetch the content of the first Inbox page
+          const pageContent = await logseq.Editor.getPageBlocksTree(
+            firstInboxPage.name
+          );
+          console.log("First Inbox page content:", pageContent);
+
+          // If you want to display the content in your component:
+          setInboxPages(pageContent);
+        } else {
+          console.log("No Inbox pages found");
+          setInboxPages([]);
+        }
       } catch (error) {
         console.error("Error fetching Inbox pages:", error);
       }
