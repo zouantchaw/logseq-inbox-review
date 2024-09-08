@@ -1,13 +1,16 @@
-import React, { useRef, CSSProperties, useState } from "react";
+import React, { useRef, CSSProperties, useState, useEffect } from "react";
 import { useAppVisible, useInference } from "./utils";
+import { BlockEntity, PageEntity } from "@logseq/libs/dist/LSPlugin.user";
 
 function App() {
   const innerRef = useRef<HTMLDivElement>(null);
   const visible = useAppVisible();
+  const [inboxPages, setInboxPages] = useState<any[]>([]);
+
   const [data, setData] = useState({
     title: "Machine Learning Needs Better Tools",
     description: "Using llama and mistral locally",
-    content: "Who was the first president of the United States?", 
+    content: "Who was the first president of the United States?",
   });
 
   const {
@@ -15,9 +18,33 @@ function App() {
     error,
     loading,
   } = useInference({
-    model: "llama3:latest", 
+    model: "llama3:latest",
     prompt: `Generate a short title for this content: ${data.content}`,
   });
+
+  useEffect(() => {
+    async function fetchInboxPages() {
+      try {
+        const inboxPages = await logseq.DB.datascriptQuery(`
+          [:find (pull ?p [*])
+           :where
+           [?p :block/name ?name]
+           [?p :block/properties ?props]
+           [(get ?props :tags) ?tags]
+           [(contains? ?tags "Inbox")]]
+        `);
+        console.log("Inbox pages:", inboxPages);
+
+        const flattenedPages = (inboxPages ?? []).flat() as PageEntity[];
+        setInboxPages(flattenedPages);
+        console.log("Fetched Inbox pages:", flattenedPages);
+      } catch (error) {
+        console.error("Error fetching Inbox pages:", error);
+      }
+    }
+
+    fetchInboxPages();
+  }, []);
 
   // Log inference data or error
   if (error) {
