@@ -11,6 +11,8 @@
   "dependencies": {
     "@logseq/libs": "^0.0.14",
     "logseq-inbox-review": "link:",
+    "lucide-react": "^0.439.0",
+    "marked": "^14.1.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

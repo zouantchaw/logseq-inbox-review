@@ -18,6 +18,8 @@ specifiers:
   eslint-plugin-react: 7.33.2
   eslint-plugin-react-hooks: 4.6.0
   logseq-inbox-review: 'link:'
+  lucide-react: ^0.439.0
+  marked: ^14.1.2
   postcss: 8.4.31
   react: ^18.2.0
   react-dom: ^18.2.0
@@ -30,6 +32,8 @@ specifiers:
 dependencies:
   '@logseq/libs': 0.0.14
   logseq-inbox-review: 'link:'
+  lucide-react: 0.439.0_react@18.2.0
+  marked: 14.1.2
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
 
@@ -3117,6 +3121,14 @@ packages:
       yallist: 4.0.0
     dev: true
 
+  /lucide-react/0.439.0_react@18.2.0:
+    resolution: {integrity: sha512-PafSWvDTpxdtNEndS2HIHxcNAbd54OaqSYJO90/b63rab2HWYqDbH194j0i82ZFdWOAcf0AHinRykXRRK2PJbw==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0-rc
+    dependencies:
+      react: 18.2.0
+    dev: false
+
   /magic-string/0.26.7:
     resolution: {integrity: sha512-hX9XH3ziStPoPhJxLq1syWuZMxbDvGNbVchfrdCtanC7D13888bMFow61x8axrx+GfHLtVeAx2kxL7tTGRl+Ow==}
     engines: {node: '>=12'}
@@ -3155,6 +3167,12 @@ packages:
       node-emoji: 1.11.0
       supports-hyperlinks: 2.3.0
     dev: true
+
+  /marked/14.1.2:
+    resolution: {integrity: sha512-f3r0yqpz31VXiDB/wj9GaOB0a2PRLQl6vJmXiFrniNwjkKdvakqJRULhjFKJpxOchlCRiG5fcacoUZY5Xa6PEQ==}
+    engines: {node: '>= 18'}
+    hasBin: true
+    dev: false
 
   /marked/5.1.2:
     resolution: {integrity: sha512-ahRPGXJpjMjwSOlBoTMZAK7ATXkli5qCPxZ21TG44rx1KEo44bii4ekgTDQPNRQ4Kh7JMb9Ub1PVk1NxRSsorg==}
