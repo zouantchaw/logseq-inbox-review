@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -7,12 +7,13 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { BlockEntity } from "@logseq/libs/dist/LSPlugin.user";
 
-type Highlight = {
+type InboxPage = {
   id: string;
+  name: string;
+  originalName: string;
   content: string;
-  source: string;
-  date: string;
 };
 
 export default function HighlightsInbox({ onClose }: { onClose: () => void }) {
@@ -20,82 +21,110 @@ export default function HighlightsInbox({ onClose }: { onClose: () => void }) {
   const [aiStatus, setAiStatus] = useState<"idle" | "processing" | "complete">(
     "idle"
   );
+  const [inboxPages, setInboxPages] = useState<InboxPage[]>([]);
 
-  const innerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    fetchInboxPages();
+  }, []);
 
-  // Mock data - replace with actual data fetching logic
-  const highlights: Highlight[] = [
-    {
-      id: "1",
-      content: "The best way to predict the future is to invent it.",
-      source: "Alan Kay",
-      date: "2023-05-15",
-    },
-    {
-      id: "2",
-      content: "Innovation distinguishes between a leader and a follower.",
-      source: "Steve Jobs",
-      date: "2023-05-16",
-    },
-    {
-      id: "3",
-      content: "Stay hungry, stay foolish.",
-      source: "Whole Earth Catalog",
-      date: "2023-05-17",
-    },
-  ];
+  async function fetchInboxPages() {
+    try {
+      const pages = await logseq.DB.datascriptQuery(`
+        [:find (pull ?p [*])
+         :where
+         [?p :block/name ?name]
+         [?p :block/properties ?props]
+         [(get ?props :tags) ?tags]
+         [(contains? ?tags "Inbox")]]
+      `);
 
-  const currentHighlight = highlights[currentIndex];
-  console.log(currentHighlight);
+      if (pages && pages.length > 0) {
+        const formattedPages = await Promise.all(
+          pages.map(async ([page]: [any]) => {
+            const pageContent = await logseq.Editor.getPageBlocksTree(
+              page.name
+            );
+            return {
+              id: page.id,
+              name: page.name,
+              originalName: page.originalName || page.name,
+              content: formatPageContent(pageContent),
+            };
+          })
+        );
+
+        setInboxPages(formattedPages);
+      }
+    } catch (error) {
+      console.error("Error fetching Inbox pages:", error);
+    }
+  }
+
+  function formatPageContent(blocks: BlockEntity[]): string {
+    return blocks
+      .flatMap((block) => {
+        if (block.children && block.children.length > 0) {
+          return block.children.map((child) => {
+            if (Array.isArray(child)) {
+              return `• ${child[1]}`;
+            } else if (typeof child === "object" && child.content) {
+              return `• ${child.content}`;
+            }
+            return "";
+          });
+        }
+        return [];
+      })
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  const currentPage = inboxPages[currentIndex];
 
   const handleNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % highlights.length);
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % inboxPages.length);
     setAiStatus("processing");
     setTimeout(() => setAiStatus("complete"), 1500); // Simulate AI processing
   };
 
   const handlePrevious = () => {
     setCurrentIndex(
-      (prevIndex) => (prevIndex - 1 + highlights.length) % highlights.length
+      (prevIndex) => (prevIndex - 1 + inboxPages.length) % inboxPages.length
     );
     setAiStatus("processing");
     setTimeout(() => setAiStatus("complete"), 1500); // Simulate AI processing
   };
 
-  useEffect(() => {
-    const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
+  const handleDelete = async () => {
+    if (currentPage) {
+      try {
+        await logseq.Editor.deletePage(currentPage.name);
+        setInboxPages((prevPages) =>
+          prevPages.filter((page) => page.id !== currentPage.id)
+        );
+        if (currentIndex >= inboxPages.length - 1) {
+          setCurrentIndex(Math.max(0, inboxPages.length - 2));
+        }
+      } catch (error) {
+        console.error("Error deleting page:", error);
       }
-    };
+    }
+  };
 
-    window.addEventListener("keydown", handleEscKey);
-
-    return () => {
-      window.removeEventListener("keydown", handleEscKey);
-    };
-  }, [onClose]);
+  if (!currentPage) {
+    return null;
+  }
 
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-      onClick={(e) => {
-        if (!innerRef.current?.contains(e.target as Node)) {
-          onClose();
-        }
-      }}
-    >
-      <div
-        ref={innerRef}
-        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          <X size={24} />
-        </button>
-        <div className="p-8">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+        <div className="p-8 relative">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            <X size={24} />
+          </button>
           <h2 className="text-3xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
             Highlights Inbox
           </h2>
@@ -103,12 +132,12 @@ export default function HighlightsInbox({ onClose }: { onClose: () => void }) {
             Review and process your captured highlights
           </p>
 
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-6 mb-6">
-            <p className="text-xl text-gray-800 dark:text-gray-200 leading-relaxed">
-              "{currentHighlight.content}"
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-              Source: {currentHighlight.source} | Date: {currentHighlight.date}
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-6 mb-6 max-h-96 overflow-y-auto">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
+              {currentPage.originalName}
+            </h3>
+            <p className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+              {currentPage.content}
             </p>
           </div>
 
@@ -134,7 +163,10 @@ export default function HighlightsInbox({ onClose }: { onClose: () => void }) {
               <button className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors">
                 <Share2 size={24} />
               </button>
-              <button className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors">
+              <button
+                onClick={handleDelete}
+                className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+              >
                 <Trash2 size={24} />
               </button>
             </div>
@@ -143,7 +175,7 @@ export default function HighlightsInbox({ onClose }: { onClose: () => void }) {
 
         <div className="px-8 py-4 bg-gray-100 dark:bg-gray-800 flex justify-between items-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {currentIndex + 1} of {highlights.length} highlights
+            {currentIndex + 1} of {inboxPages.length} highlights
           </p>
           <div className="flex items-center space-x-2">
             <div
