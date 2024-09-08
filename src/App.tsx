@@ -4,11 +4,10 @@ import { useAppVisible, useInference } from "./utils";
 function App() {
   const innerRef = useRef<HTMLDivElement>(null);
   const visible = useAppVisible();
-  const [data, setdata] = useState({
+  const [data, setData] = useState({
     title: "Machine Learning Needs Better Tools",
     description: "Using llama and mistral locally",
-    content:
-      "In early 2021, there was a shift. Advadnoun released a Colab notebook called [The Big Sleep](https://twitter.com/advadnoun/status/1351038053033406468?lang=en). RiversHaveWings followed up with the [VQGAN+CLIP notebook](https://colab.research.google.com/github/justinjohn0306/VQGAN-CLIP/blob/main/VQGAN%2BCLIP(Updated).ipynb). These notebooks turned text descriptions into images by guiding a GAN with CLIP. ([View Highlight](https://read.readwise.io/read/01gstvetndwz03csdw7dhj6zpv))\n\nThese people were not affiliated with a lab. They were often self-taught, just tinkering in their spare time. Or they were software engineers, cobbling together bits of machine learning code.\n\nPart of what made this all possible was pre-trained foundation models. Instead of having to train a model from scratch at great expense, individuals could pick models off-the-shelf and combine them in interesting ways. Kind of like how you can import a few packages from npm and plug them together to make something new. ([View Highlight](https://read.readwise.io/read/01gstvg3sz6hxf6hbdvhgfxhd5))",
+    content: "Who was the first president of the United States?", 
   });
 
   const {
@@ -16,10 +15,16 @@ function App() {
     error,
     loading,
   } = useInference({
-    model: "mistral",
-    prompt: `Summarize this content into a title: ${data.content}`
+    model: "llama3:latest", 
+    prompt: `Generate a short title for this content: ${data.content}`,
   });
-  console.log(inferenceData);
+
+  // Log inference data or error
+  if (error) {
+    console.error("Inference error:", error);
+  } else if (!loading) {
+    console.log("Inference result:", inferenceData);
+  }
 
   if (visible) {
     return (
@@ -76,7 +81,7 @@ function App() {
                 console.log("ai");
               }}
             >
-              ai
+              {loading ? "Loading..." : "Ai"}
             </button>
             <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
               Save
