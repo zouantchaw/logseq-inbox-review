@@ -3,3 +3,5 @@ node_modules
 dist
 dist-ssr
 *.local
+data/all-inbox-pages.json
+data/inbox-page-content.json

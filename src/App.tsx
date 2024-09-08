@@ -1,6 +1,6 @@
 import React, { useRef, CSSProperties, useState, useEffect } from "react";
 import { useAppVisible, useInference } from "./utils";
-import { BlockEntity, PageEntity } from "@logseq/libs/dist/LSPlugin.user";
+import { BlockEntity } from "@logseq/libs/dist/LSPlugin.user";
 
 function App() {
   const innerRef = useRef<HTMLDivElement>(null);
@@ -8,18 +8,9 @@ function App() {
   const [inboxPages, setInboxPages] = useState<BlockEntity[]>([]);
 
   const [data, setData] = useState({
-    title: "Machine Learning Needs Better Tools",
-    description: "Using llama and mistral locally",
-    content: "Who was the first president of the United States?",
-  });
-
-  const {
-    data: inferenceData,
-    error,
-    loading,
-  } = useInference({
-    model: "llama3:latest",
-    prompt: `Generate a short title for this content: ${data.content}`,
+    title: "Loading...",
+    description: "Fetching Inbox page content",
+    content: "",
   });
 
   useEffect(() => {
@@ -45,14 +36,43 @@ function App() {
           );
           console.log("First Inbox page content:", pageContent);
 
-          // If you want to display the content in your component:
+          // Process the content and format it as bullet points
+          const formattedContent = pageContent
+            .map((block) => {
+              // Remove the properties section if it exists
+              const contentWithoutProperties =
+                block.content.split("\n\n")[1] || block.content;
+              return `• ${contentWithoutProperties.trim()}`;
+            })
+            .join("\n");
+
+          // Update the data state with the new content and title
+          setData({
+            title: firstInboxPage.originalName || firstInboxPage.name,
+            description: `Content from "${
+              firstInboxPage.originalName || firstInboxPage.name
+            }"`,
+            content: formattedContent,
+          });
+
           setInboxPages(pageContent);
         } else {
           console.log("No Inbox pages found");
           setInboxPages([]);
+          setData({
+            title: "No Inbox Pages",
+            description: "No Inbox pages found",
+            content: "There are no pages tagged with Inbox.",
+          });
         }
       } catch (error) {
         console.error("Error fetching Inbox pages:", error);
+        setData({
+          title: "Error",
+          description: "Failed to fetch Inbox pages",
+          content:
+            "An error occurred while fetching Inbox pages. Please try again.",
+        });
       }
     }
 
@@ -60,11 +80,22 @@ function App() {
   }, []);
 
   // Log inference data or error
-  if (error) {
-    console.error("Inference error:", error);
-  } else if (!loading) {
-    console.log("Inference result:", inferenceData);
-  }
+  const {
+    data: inferenceData,
+    error: inferenceError,
+    loading: inferenceLoading,
+  } = useInference({
+    model: "llama3:latest",
+    prompt: `Generate a short title for this content: ${data.content}`,
+  });
+
+  useEffect(() => {
+    if (inferenceError) {
+      console.error("Inference error:", inferenceError);
+    } else if (!inferenceLoading) {
+      console.log("Inference result:", inferenceData);
+    }
+  }, [inferenceData, inferenceError, inferenceLoading]);
 
   if (visible) {
     return (
@@ -83,9 +114,7 @@ function App() {
           data-v0-t="card"
         >
           <div className="flex flex-col space-y-1.5 p-6">
-            <h3 className="whitespace-nowrap tracking-tight text-lg font-bold">
-              {data.title}
-            </h3>
+            <h3 className="tracking-tight text-lg font-bold">{data.title}</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {data.description}
             </p>
@@ -109,7 +138,7 @@ function App() {
                 style={{ overflow: "hidden scroll" }}
               >
                 <div style={{ minWidth: "100%", display: "table" }}>
-                  <p>{data.content}</p>
+                  <pre className="whitespace-pre-wrap">{data.content}</pre>
                 </div>
               </div>
             </div>
@@ -117,11 +146,9 @@ function App() {
           <div className="items-center p-6 flex justify-end space-x-4">
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              onClick={(e) => {
-                console.log("ai");
-              }}
+              onClick={() => console.log("AI button clicked")}
             >
-              {loading ? "Loading..." : "Ai"}
+              {inferenceLoading ? "Loading..." : "AI"}
             </button>
             <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
               Save
