@@ -58,8 +58,8 @@ export default function HighlightsInbox({
         runInference("llama3:latest", summaryPrompt),
       ]);
 
-      const cleanTitle = title.replace(/^.*?:\s*/, "").trim();
-      const cleanSummary = summary.replace(/^.*?:\s*/, "").trim();
+      const cleanTitle = title.replace(/^.*?:\s*/, "").replace(/"/g, "").trim();
+      const cleanSummary = summary.replace(/^.*?:\s*/, "").replace(/"/g, "").trim();
 
       setGeneratedTitle(cleanTitle);
       setGeneratedSummary(cleanSummary);
