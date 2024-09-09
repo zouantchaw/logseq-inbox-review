@@ -7,7 +7,7 @@ import {
   Blocks,
   X,
 } from "lucide-react";
-import { useInference } from "../utils";
+import { runInference } from "../services/inferenceService";
 
 type InboxPage = {
   id: string;
@@ -43,68 +43,37 @@ export default function HighlightsInbox({
   const [generatedTitle, setGeneratedTitle] = useState("");
   const [generatedSummary, setGeneratedSummary] = useState("");
   const [showGeneratedContent, setShowGeneratedContent] = useState(false);
-  const [shouldRunInference, setShouldRunInference] = useState(false);
 
-  const generateTitle = useCallback(() => {
-    if (currentPage && shouldRunInference) {
-      return `Generate a concise title for the following content:\n\n${currentPage.content}`;
-    }
-    return "";
-  }, [currentPage, shouldRunInference]);
+  const generateContent = useCallback(async () => {
+    if (!currentPage) return;
 
-  const generateSummary = useCallback(() => {
-    if (currentPage && shouldRunInference) {
-      return `Summarize the following content in a few sentences:\n\n${currentPage.content}`;
-    }
-    return "";
-  }, [currentPage, shouldRunInference]);
+    setLocalAiStatus("processing");
 
-  const {
-    data: title,
-    error: titleError,
-    loading: titleLoading,
-  } = useInference({
-    model: "llama3:latest",
-    prompt: generateTitle(),
-  });
+    try {
+      const titlePrompt = `Generate a concise title for the following content:\n\n${currentPage.content}`;
+      const summaryPrompt = `Summarize the following content in a few sentences:\n\n${currentPage.content}`;
 
-  const {
-    data: summary,
-    error: summaryError,
-    loading: summaryLoading,
-  } = useInference({
-    model: "llama3:latest",
-    prompt: generateSummary(),
-  });
+      const [title, summary] = await Promise.all([
+        runInference("llama3:latest", titlePrompt),
+        runInference("llama3:latest", summaryPrompt),
+      ]);
 
-  useEffect(() => {
-    if (shouldRunInference) {
-      setLocalAiStatus("processing");
-    }
-  }, [shouldRunInference]);
-
-  useEffect(() => {
-    if (title && summary) {
-      setGeneratedTitle(title.join(" ") || "");
-      setGeneratedSummary(summary.join(" ") || "");
+      setGeneratedTitle(title);
+      setGeneratedSummary(summary);
       setLocalAiStatus("complete");
-      setShouldRunInference(false);
-    }
-  }, [title, summary]);
 
-  useEffect(() => {
-    if (titleError || summaryError) {
-      console.error("Error during inference:", titleError || summaryError);
+      console.log("Generated Title:", title);
+      console.log("Generated Summary:", summary);
+    } catch (error) {
+      console.error("Error generating content:", error);
       setLocalAiStatus("idle");
-      setShouldRunInference(false);
     }
-  }, [titleError, summaryError]);
+  }, [currentPage]);
 
   useEffect(() => {
     setShowGeneratedContent(false);
     setGeneratedTitle("");
     setGeneratedSummary("");
-    setShouldRunInference(false);
     setLocalAiStatus("idle");
   }, [currentPage]);
 
@@ -114,7 +83,7 @@ export default function HighlightsInbox({
     if (generatedTitle && generatedSummary) {
       setShowGeneratedContent(true);
     } else {
-      setShouldRunInference(true);
+      generateContent();
     }
   };
 
