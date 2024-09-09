@@ -76,14 +76,35 @@ export default function HighlightsInbox({
   const handleSave = useCallback(async () => {
     if (!currentPage || !generatedTitle || !generatedSummary) return;
 
+    setLocalAiStatus("processing");
+
     try {
       // Create a new page with the generated title and summary
-      await logseq.Editor.createPage(generatedTitle, generatedSummary, {
-        format: "markdown",
-      });
+      const newPage = await logseq.Editor.createPage(
+        generatedTitle,
+        {
+          "ai-generated-summary": generatedSummary,
+        },
+        {
+          format: "markdown",
+          redirect: false,
+        }
+      );
 
-      // Delete the old page
-      await logseq.Editor.deletePage(currentPage.id);
+      if (!newPage) {
+        throw new Error("Failed to create new page");
+      }
+
+      console.log("New page created:", newPage);
+
+      // Attempt to delete the old page
+      try {
+        await logseq.Editor.deletePage(currentPage.name);
+        console.log("Old page deleted:", currentPage.name);
+      } catch (deleteError) {
+        console.error("Error deleting old page:", deleteError);
+        // If we can't delete the old page, we'll just leave it
+      }
 
       // Move to the next page
       onNext();
@@ -93,8 +114,13 @@ export default function HighlightsInbox({
       setGeneratedSummary("");
       setShowGeneratedContent(false);
       setLocalAiStatus("idle");
+
+      // Show a success message
+      logseq.UI.showMsg("Page processed and saved successfully", "success");
     } catch (error) {
       console.error("Error saving new page:", error);
+      setLocalAiStatus("idle");
+      logseq.UI.showMsg("Failed to save new page. Please try again.", "error");
     }
   }, [currentPage, generatedTitle, generatedSummary, onNext]);
 
