@@ -80,11 +80,12 @@ export default function HighlightsInbox({ onClose }: { onClose: () => void }) {
   }
 
   const currentPage = inboxPages[currentIndex];
+  console.log("currentPage", currentPage);
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % inboxPages.length);
     setAiStatus("processing");
-    setTimeout(() => setAiStatus("complete"), 1500); // Simulate AI processing
+    setTimeout(() => setAiStatus("complete"), 1500);
   };
 
   const handlePrevious = () => {
@@ -92,7 +93,7 @@ export default function HighlightsInbox({ onClose }: { onClose: () => void }) {
       (prevIndex) => (prevIndex - 1 + inboxPages.length) % inboxPages.length
     );
     setAiStatus("processing");
-    setTimeout(() => setAiStatus("complete"), 1500); // Simulate AI processing
+    setTimeout(() => setAiStatus("complete"), 1500);
   };
 
   const handleDelete = async () => {
@@ -126,10 +127,10 @@ export default function HighlightsInbox({ onClose }: { onClose: () => void }) {
             <X size={24} />
           </button>
           <h2 className="text-3xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
-            Highlights Inbox
+            Inbox
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            Review and process your captured highlights
+            Review and process your highlights
           </p>
 
           <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-6 mb-6 max-h-96 overflow-y-auto">
