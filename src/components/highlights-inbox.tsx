@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -7,6 +7,7 @@ import {
   Blocks,
   X,
 } from "lucide-react";
+import { useInference } from "../utils";
 
 type InboxPage = {
   id: string;
@@ -38,6 +39,85 @@ export default function HighlightsInbox({
   onPrevious,
   onDelete,
 }: HighlightsInboxProps) {
+  const [localAiStatus, setLocalAiStatus] = useState(aiStatus);
+  const [generatedTitle, setGeneratedTitle] = useState("");
+  const [generatedSummary, setGeneratedSummary] = useState("");
+  const [showGeneratedContent, setShowGeneratedContent] = useState(false);
+  const [shouldRunInference, setShouldRunInference] = useState(false);
+
+  const generateTitle = useCallback(() => {
+    if (currentPage && shouldRunInference) {
+      return `Generate a concise title for the following content:\n\n${currentPage.content}`;
+    }
+    return "";
+  }, [currentPage, shouldRunInference]);
+
+  const generateSummary = useCallback(() => {
+    if (currentPage && shouldRunInference) {
+      return `Summarize the following content in a few sentences:\n\n${currentPage.content}`;
+    }
+    return "";
+  }, [currentPage, shouldRunInference]);
+
+  const {
+    data: title,
+    error: titleError,
+    loading: titleLoading,
+  } = useInference({
+    model: "llama3:latest",
+    prompt: generateTitle(),
+  });
+
+  const {
+    data: summary,
+    error: summaryError,
+    loading: summaryLoading,
+  } = useInference({
+    model: "llama3:latest",
+    prompt: generateSummary(),
+  });
+
+  useEffect(() => {
+    if (shouldRunInference) {
+      setLocalAiStatus("processing");
+    }
+  }, [shouldRunInference]);
+
+  useEffect(() => {
+    if (title && summary) {
+      setGeneratedTitle(title.join(" ") || "");
+      setGeneratedSummary(summary.join(" ") || "");
+      setLocalAiStatus("complete");
+      setShouldRunInference(false);
+    }
+  }, [title, summary]);
+
+  useEffect(() => {
+    if (titleError || summaryError) {
+      console.error("Error during inference:", titleError || summaryError);
+      setLocalAiStatus("idle");
+      setShouldRunInference(false);
+    }
+  }, [titleError, summaryError]);
+
+  useEffect(() => {
+    setShowGeneratedContent(false);
+    setGeneratedTitle("");
+    setGeneratedSummary("");
+    setShouldRunInference(false);
+    setLocalAiStatus("idle");
+  }, [currentPage]);
+
+  const handleBlocksClick = () => {
+    if (!currentPage || localAiStatus === "processing") return;
+
+    if (generatedTitle && generatedSummary) {
+      setShowGeneratedContent(true);
+    } else {
+      setShouldRunInference(true);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -73,10 +153,10 @@ export default function HighlightsInbox({
 
           <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-6 mb-6 max-h-96 overflow-y-auto">
             <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
-              {currentPage.originalName}
+              {showGeneratedContent ? generatedTitle : currentPage.originalName}
             </h3>
             <p className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
-              {currentPage.content}
+              {showGeneratedContent ? generatedSummary : currentPage.content}
             </p>
           </div>
 
@@ -96,7 +176,11 @@ export default function HighlightsInbox({
               </button>
             </div>
             <div className="flex space-x-4">
-              <button className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors">
+              <button
+                onClick={handleBlocksClick}
+                className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={localAiStatus === "processing"}
+              >
                 <Blocks size={24} />
               </button>
               <button
@@ -116,15 +200,16 @@ export default function HighlightsInbox({
           <div className="flex items-center space-x-2">
             <div
               className={`w-3 h-3 rounded-full ${
-                aiStatus === "idle"
+                localAiStatus === "idle"
                   ? "bg-gray-400"
-                  : aiStatus === "processing"
+                  : localAiStatus === "processing"
                   ? "bg-yellow-400"
                   : "bg-green-400"
               }`}
             ></div>
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              AI Status: {aiStatus.charAt(0).toUpperCase() + aiStatus.slice(1)}
+              AI Status:{" "}
+              {localAiStatus.charAt(0).toUpperCase() + localAiStatus.slice(1)}
             </p>
           </div>
         </div>
