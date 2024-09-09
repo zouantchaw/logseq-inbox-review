@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Bookmark,
-  Trash2,
-  Blocks,
-  X,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Trash2, Blocks, X, Save } from "lucide-react";
 import { runInference } from "../services/inferenceService";
 
 type InboxPage = {
@@ -58,12 +51,19 @@ export default function HighlightsInbox({
         runInference("llama3:latest", summaryPrompt),
       ]);
 
-      const cleanTitle = title.replace(/^.*?:\s*/, "").replace(/"/g, "").trim();
-      const cleanSummary = summary.replace(/^.*?:\s*/, "").replace(/"/g, "").trim();
+      const cleanTitle = title
+        .replace(/^.*?:\s*/, "")
+        .replace(/"/g, "")
+        .trim();
+      const cleanSummary = summary
+        .replace(/^.*?:\s*/, "")
+        .replace(/"/g, "")
+        .trim();
 
       setGeneratedTitle(cleanTitle);
       setGeneratedSummary(cleanSummary);
       setLocalAiStatus("complete");
+      setShowGeneratedContent(true);
 
       console.log("Generated Title:", cleanTitle);
       console.log("Generated Summary:", cleanSummary);
@@ -72,6 +72,31 @@ export default function HighlightsInbox({
       setLocalAiStatus("idle");
     }
   }, [currentPage]);
+
+  const handleSave = useCallback(async () => {
+    if (!currentPage || !generatedTitle || !generatedSummary) return;
+
+    try {
+      // Create a new page with the generated title and summary
+      await logseq.Editor.createPage(generatedTitle, generatedSummary, {
+        format: "markdown",
+      });
+
+      // Delete the old page
+      await logseq.Editor.deletePage(currentPage.id);
+
+      // Move to the next page
+      onNext();
+
+      // Reset the generated content
+      setGeneratedTitle("");
+      setGeneratedSummary("");
+      setShowGeneratedContent(false);
+      setLocalAiStatus("idle");
+    } catch (error) {
+      console.error("Error saving new page:", error);
+    }
+  }, [currentPage, generatedTitle, generatedSummary, onNext]);
 
   useEffect(() => {
     setShowGeneratedContent(false);
@@ -82,12 +107,7 @@ export default function HighlightsInbox({
 
   const handleBlocksClick = () => {
     if (!currentPage || localAiStatus === "processing") return;
-
-    if (generatedTitle && generatedSummary) {
-      setShowGeneratedContent(true);
-    } else {
-      generateContent();
-    }
+    generateContent();
   };
 
   if (isLoading) {
@@ -148,13 +168,22 @@ export default function HighlightsInbox({
               </button>
             </div>
             <div className="flex space-x-4">
-              <button
-                onClick={handleBlocksClick}
-                className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={localAiStatus === "processing"}
-              >
-                <Blocks size={24} />
-              </button>
+              {showGeneratedContent ? (
+                <button
+                  onClick={handleSave}
+                  className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
+                >
+                  <Save size={24} />
+                </button>
+              ) : (
+                <button
+                  onClick={handleBlocksClick}
+                  className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={localAiStatus === "processing"}
+                >
+                  <Blocks size={24} />
+                </button>
+              )}
               <button
                 onClick={onDelete}
                 className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
