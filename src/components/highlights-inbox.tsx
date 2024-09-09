@@ -50,20 +50,23 @@ export default function HighlightsInbox({
     setLocalAiStatus("processing");
 
     try {
-      const titlePrompt = `Generate a concise title for the following content:\n\n${currentPage.content}`;
-      const summaryPrompt = `Summarize the following content in a few sentences:\n\n${currentPage.content}`;
+      const titlePrompt = `Generate a concise title for the following content. Only provide the title, nothing else:\n\n${currentPage.content}`;
+      const summaryPrompt = `Summarize the following content in a few sentences. Only provide the summary, nothing else:\n\n${currentPage.content}`;
 
       const [title, summary] = await Promise.all([
         runInference("llama3:latest", titlePrompt),
         runInference("llama3:latest", summaryPrompt),
       ]);
 
-      setGeneratedTitle(title);
-      setGeneratedSummary(summary);
+      const cleanTitle = title.replace(/^.*?:\s*/, "").trim();
+      const cleanSummary = summary.replace(/^.*?:\s*/, "").trim();
+
+      setGeneratedTitle(cleanTitle);
+      setGeneratedSummary(cleanSummary);
       setLocalAiStatus("complete");
 
-      console.log("Generated Title:", title);
-      console.log("Generated Summary:", summary);
+      console.log("Generated Title:", cleanTitle);
+      console.log("Generated Summary:", cleanSummary);
     } catch (error) {
       console.error("Error generating content:", error);
       setLocalAiStatus("idle");
