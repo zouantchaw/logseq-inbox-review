@@ -3,8 +3,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Bookmark,
-  Share2,
   Trash2,
+  Blocks,
   X,
 } from "lucide-react";
 
@@ -97,10 +97,7 @@ export default function HighlightsInbox({
             </div>
             <div className="flex space-x-4">
               <button className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors">
-                <Bookmark size={24} />
-              </button>
-              <button className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors">
-                <Share2 size={24} />
+                <Blocks size={24} />
               </button>
               <button
                 onClick={onDelete}
