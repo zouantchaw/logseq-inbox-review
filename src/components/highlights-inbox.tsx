@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, ArrowRight, Trash2, Blocks, X, Save } from "lucide-react";
 import { runInference } from "../services/inferenceService";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import { Tweet } from "react-twitter-widgets";
 
 type InboxPage = {
   id: string;
@@ -20,6 +24,42 @@ interface HighlightsInboxProps {
   onPrevious: () => void;
   onDelete: () => void;
 }
+
+const YouTubeEmbed = ({ url }: { url: string }) => {
+  const videoId = url.split("v=")[1] || url.split("/").pop();
+  return (
+    <div className="aspect-w-16 aspect-h-9">
+      <iframe
+        src={`https://www.youtube.com/embed/${videoId}`}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        className="w-full h-full"
+      ></iframe>
+    </div>
+  );
+};
+
+const TweetEmbed = ({ url }: { url: string }) => {
+  const tweetId = url.split("/").pop() || "";
+  return <Tweet tweetId={tweetId} options={{ width: "100%" }} />;
+};
+
+const CustomLink = (props: any) => {
+  const href = props.href;
+  if (href.includes("youtube.com") || href.includes("youtu.be")) {
+    return <YouTubeEmbed url={href} />;
+  } else if (href.includes("twitter.com") && href.includes("/status/")) {
+    return <TweetEmbed url={href} />;
+  }
+  return (
+    <a
+      {...props}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-500 underline"
+    />
+  );
+};
 
 export default function HighlightsInbox({
   isLoading,
@@ -136,6 +176,19 @@ export default function HighlightsInbox({
     generateContent();
   };
 
+  const renderContent = (content: string) => (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
+      components={{
+        a: CustomLink,
+        img: (props) => <img {...props} className="max-w-full h-auto" />,
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -173,9 +226,11 @@ export default function HighlightsInbox({
             <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
               {showGeneratedContent ? generatedTitle : currentPage.originalName}
             </h3>
-            <p className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
-              {showGeneratedContent ? generatedSummary : currentPage.content}
-            </p>
+            <div className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed">
+              {showGeneratedContent
+                ? renderContent(generatedSummary)
+                : renderContent(currentPage.content)}
+            </div>
           </div>
 
           <div className="flex justify-between items-center">
