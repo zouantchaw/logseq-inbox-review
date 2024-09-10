@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, ArrowRight, Trash2, Blocks, X, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Trash2,
+  Blocks,
+  X,
+  Save,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { runInference } from "../services/inferenceService";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -76,6 +85,11 @@ export default function HighlightsInbox({
   const [generatedTitle, setGeneratedTitle] = useState("");
   const [generatedSummary, setGeneratedSummary] = useState("");
   const [showGeneratedContent, setShowGeneratedContent] = useState(false);
+  const [isContentExpanded, setIsContentExpanded] = useState(false);
+
+  const toggleContentExpansion = () => {
+    setIsContentExpanded(!isContentExpanded);
+  };
 
   const generateContent = useCallback(async () => {
     if (!currentPage) return;
@@ -123,7 +137,7 @@ export default function HighlightsInbox({
       const newPage = await logseq.Editor.createPage(
         generatedTitle,
         {
-          "ai-generated-summary": generatedSummary,
+          "ai-generated-summary": generatedSummary + "#card",
         },
         {
           format: "markdown",
@@ -182,7 +196,9 @@ export default function HighlightsInbox({
       rehypePlugins={[rehypeRaw]}
       components={{
         a: CustomLink,
-        img: (props) => <img {...props} className="max-w-full h-auto" />,
+        img: (props) => (
+          <img {...props} className="max-w-full h-auto rounded-lg shadow-md" />
+        ),
       }}
     >
       {content}
@@ -207,7 +223,7 @@ export default function HighlightsInbox({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden">
         <div className="p-8 relative">
           <button
             onClick={onClose}
@@ -222,11 +238,27 @@ export default function HighlightsInbox({
             Review and process your highlights
           </p>
 
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-6 mb-6 max-h-96 overflow-y-auto">
-            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
-              {showGeneratedContent ? generatedTitle : currentPage.originalName}
-            </h3>
-            <div className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed">
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-6 mb-6 overflow-hidden transition-all duration-300 ease-in-out">
+            <div
+              className="flex justify-between items-center cursor-pointer"
+              onClick={toggleContentExpansion}
+            >
+              <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 transition-colors hover:text-blue-500 dark:hover:text-blue-400">
+                {showGeneratedContent
+                  ? generatedTitle
+                  : currentPage.originalName}
+              </h3>
+              {isContentExpanded ? (
+                <ChevronUp size={24} />
+              ) : (
+                <ChevronDown size={24} />
+              )}
+            </div>
+            <div
+              className={`mt-4 text-lg text-gray-800 dark:text-gray-200 leading-relaxed ${
+                isContentExpanded ? "max-h-[60vh]" : "max-h-48"
+              } overflow-y-auto transition-all duration-300 ease-in-out`}
+            >
               {showGeneratedContent
                 ? renderContent(generatedSummary)
                 : renderContent(currentPage.content)}
@@ -252,24 +284,27 @@ export default function HighlightsInbox({
               {showGeneratedContent ? (
                 <button
                   onClick={handleSave}
-                  className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
+                  className="px-4 py-2 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors flex items-center"
                 >
-                  <Save size={24} />
+                  <Save size={20} className="mr-2" />
+                  Save
                 </button>
               ) : (
                 <button
                   onClick={handleBlocksClick}
-                  className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   disabled={localAiStatus === "processing"}
                 >
-                  <Blocks size={24} />
+                  <Blocks size={20} className="mr-2" />
+                  Generate
                 </button>
               )}
               <button
                 onClick={onDelete}
-                className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+                className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center"
               >
-                <Trash2 size={24} />
+                <Trash2 size={20} className="mr-2" />
+                Delete
               </button>
             </div>
           </div>
